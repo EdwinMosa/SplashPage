@@ -1,3 +1,4 @@
+
 import * as THREE from 'three/webgpu'
 import {
   Fn,
@@ -410,15 +411,16 @@ const computeVertices = Fn(() => {
 })().compute(TOTAL_VERTICES)
 
 // ── Renderer ────────────────────────────────────────────────────────────────
-const renderer = new THREE.WebGPURenderer({ antialias: true, alpha: true })
-renderer.setSize(window.innerWidth, window.innerHeight)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.setClearColor(0x000000, 0)
-renderer.shadowMap.enabled = true
-document.body.appendChild(renderer.domElement)
-await renderer.init()
-
+if (typeof document !== 'undefined') {
+  const renderer = new THREE.WebGPURenderer({ antialias: true, alpha: true })
+  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.toneMapping = THREE.ACESFilmicToneMapping
+  renderer.setClearColor(0x000000, 0)
+  renderer.shadowMap.enabled = true
+  document.body.appendChild(renderer.domElement)
+  await renderer.init()
+}
 // ── Camera ──────────────────────────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(params.cameraFov, window.innerWidth / window.innerHeight, 0.1, 200)
 camera.position.z = params.cameraDistance
