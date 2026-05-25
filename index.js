@@ -1,4 +1,10 @@
 
+// ── Browser Environment Check ──────────────────────────────────────────────
+if (typeof window === 'undefined' || typeof document === 'undefined') {
+  console.error('This application requires a browser environment.')
+  throw new Error('Browser environment required')
+}
+
 import * as THREE from 'three/webgpu'
 import {
   Fn,
@@ -410,34 +416,36 @@ const computeVertices = Fn(() => {
   vertexNormals.element(idx).assign(normalize(N.mul(cx).add(B.mul(cy))))
 })().compute(TOTAL_VERTICES)
 
-// ── Renderer ────────────────────────────────────────────────────────────────
+// ── App Initialization (execute only in browser) ─────────────────────────────
 if (typeof document !== 'undefined') {
-  const renderer = new THREE.WebGPURenderer({ antialias: true, alpha: true })
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-  renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.setClearColor(0x000000, 0)
-  renderer.shadowMap.enabled = true
-  document.body.appendChild(renderer.domElement)
-  await renderer.init()
-}
-// ── Camera ──────────────────────────────────────────────────────────────────
-const camera = new THREE.PerspectiveCamera(params.cameraFov, window.innerWidth / window.innerHeight, 0.1, 200)
-camera.position.z = params.cameraDistance
+  ; (async () => {
+    // ── Renderer ────────────────────────────────────────────────────────────────
+    const renderer = new THREE.WebGPURenderer({ antialias: true, alpha: true })
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.setClearColor(0x000000, 0)
+    renderer.shadowMap.enabled = true
+    document.body.appendChild(renderer.domElement)
+    await renderer.init()
 
-// Invisible overlay to capture pointer events for dragging in debug mode
-const debugOverlay = document.createElement('div')
-debugOverlay.style.cssText = 'position:fixed;inset:0;z-index:100;display:none;'
-document.body.appendChild(debugOverlay)
+    // ── Camera ──────────────────────────────────────────────────────────────────
+    const camera = new THREE.PerspectiveCamera(params.cameraFov, window.innerWidth / window.innerHeight, 0.1, 200)
+    camera.position.z = params.cameraDistance
 
-const controls = new OrbitControls(camera, debugOverlay)
-controls.enableDamping = true
-controls.enabled = params.debug
+    // Invisible overlay to capture pointer events for dragging in debug mode
+    const debugOverlay = document.createElement('div')
+    debugOverlay.style.cssText = 'position:fixed;inset:0;z-index:100;display:none;'
+    document.body.appendChild(debugOverlay)
 
-// ── Scene ───────────────────────────────────────────────────────────────────
-const scene = new THREE.Scene()
+    const controls = new OrbitControls(camera, debugOverlay)
+    controls.enableDamping = true
+    controls.enabled = params.debug
 
-const ambientLight = new THREE.AmbientLight(0xffffff, params.ambientIntensity)
+    // ── Scene ───────────────────────────────────────────────────────────────────
+    const scene = new THREE.Scene()
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, params.ambientIntensity)
 scene.add(ambientLight)
 
 const dir1 = new THREE.DirectionalLight(0xffffff, params.dirLight1Intensity)
@@ -952,6 +960,8 @@ renderer.setAnimationLoop(async () => {
   renderer.render(scene, camera)
 
   stats.update()
-  await renderer.resolveTimestampsAsync('render')
-  await renderer.resolveTimestampsAsync('compute')
-})
+    await renderer.resolveTimestampsAsync('render')
+    await renderer.resolveTimestampsAsync('compute')
+  })
+  })()
+}
